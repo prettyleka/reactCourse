@@ -1,9 +1,9 @@
 import { useSelector } from 'react-redux';
 import { baseUrl } from '../shared/baseUrl';
 import { FlatList, Text, View } from 'react-native';
-import { Avatar, ListItem, Tile } from 'react-native-elements';
+import { Tile } from 'react-native-elements';
 import Loading from '../components/LoadingComponent';
-
+import * as Animatable from 'react-native-animatable'
 
 const DirectoryScreen = ({ navigation }) => {
     const campsites = useSelector((state) => state.campsites);
@@ -42,11 +42,13 @@ const DirectoryScreen = ({ navigation }) => {
         );
     };
     return (
-        <FlatList
+        <Animatable.View animation='fadeInRightBig' duration={2000}>
+                    <FlatList
             data={campsites.campsitesArray}
             renderItem={renderDirectoryItem}
             keyExtractor={(item) => item.id.toString()}
         />
+       </Animatable.View>
     );
 };
 
