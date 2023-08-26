@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Text, View, ScrollView, StyleSheet, Switch, Button, Modal } from 'react-native';
+import { Text, View, ScrollView, StyleSheet, Switch, Button, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as Animatable from 'react-native-animatable'
 
 const ReservationScreen = () => {
     const [campers, setCampers] = useState(1);
@@ -10,7 +11,6 @@ const ReservationScreen = () => {
     const [showCalendar, setShowCalendar] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
-
     const onDateChange = (event, selectedDate) => {
         const currentDate = selectedDate || date;
         setShowCalendar(Platform.OS === 'ios');
@@ -18,14 +18,28 @@ const ReservationScreen = () => {
     };
 
     const handleReservation = () => {
+        const text = `Number of Campers: ${campers}
+        \nHike-In? ${hikeIn}
+        \nDate: ${date.toLocaleDateString("en-US")}`;
         console.log('campers:', campers);
         console.log('hikeIn:', hikeIn);
         console.log('date:', date);
-        setCampers(1);
-        setHikeIn(false);
-        setDate(new Date());
         setShowCalendar(false);
-        setShowModal(!showModal);
+        Alert.alert(
+            "Begin Search?",
+            text,
+            [{
+                text: 'Cancel',
+                style: 'cancel',
+                onPress: () => resetForm()
+                
+            },
+            {
+                text: 'OK',
+                onPress: () => resetForm()
+            }], 
+            { cancelable: false })
+        
     };
 
 
@@ -40,6 +54,7 @@ const ReservationScreen = () => {
 
     return (
         <ScrollView>
+            <Animatable.View animation="zoomIn" duration={2000} delay={1000}>
             <View style={styles.formRow}>
                 <Text style={styles.formLabel}>Number of Campers:</Text>
                 <Picker
@@ -90,7 +105,48 @@ const ReservationScreen = () => {
                     accessibilityLabel='Tap me to search for available campsites to reserve'
                 />
             </View>
-            <Modal
+            </Animatable.View>    
+        </ScrollView>
+    );
+};
+
+const styles = StyleSheet.create({
+    formRow: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        flex: 1,
+        flexDirection: 'row',
+        margin: 20
+    },
+    formLabel: {
+        fontSize: 18,
+        flex: 2
+    },
+    formItem: {
+        flex: 1
+    }
+    // modal: {
+    //     justifyContent: 'center',
+    //     margin: 20
+    // },
+    // modalTitle: {
+    //     fontSize: 24,
+    //     fontWeight: 'bold',
+    //     backgroundColor: '#5637DD',
+    //     textAlign: 'center',
+    //     color: '#fff',
+    //     marginBottom: 20
+    // },
+    // modalText: {
+    //     fontSize: 18,
+    //     margin: 10
+    // }
+});
+
+export default ReservationScreen;
+
+
+/*<Modal
                 animationType='slide'
                 transparent={false}
                 visible={showModal}
@@ -117,42 +173,4 @@ const ReservationScreen = () => {
                         title='Close'
                     />
                 </View>
-            </Modal>
-        </ScrollView>
-    );
-};
-
-const styles = StyleSheet.create({
-    formRow: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        flex: 1,
-        flexDirection: 'row',
-        margin: 20
-    },
-    formLabel: {
-        fontSize: 18,
-        flex: 2
-    },
-    formItem: {
-        flex: 1
-    },
-    modal: {
-        justifyContent: 'center',
-        margin: 20
-    },
-    modalTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        backgroundColor: '#5637DD',
-        textAlign: 'center',
-        color: '#fff',
-        marginBottom: 20
-    },
-    modalText: {
-        fontSize: 18,
-        margin: 10
-    }
-});
-
-export default ReservationScreen;
+            </Modal>*/
