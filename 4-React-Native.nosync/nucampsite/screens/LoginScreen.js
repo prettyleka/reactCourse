@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, StyleSheet, ScrollView, Image, Alert, PermissionsAndroid, ToastAndroid, CameraRoll } from 'react-native';
 import { CheckBox, Input, Button, Icon } from 'react-native-elements';
 import * as SecureStore from 'expo-secure-store';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import * as ImagePicker from 'expo-image-picker';
 import { baseUrl } from '../shared/baseUrl';
 import logo from '../assets/images/logo.png';
+import * as ImageManipulator from "expo-image-manipulator";
+import * as MediaLibrary from "expo-media-library";
+import * as FileSystem from 'expo-file-system';
+import { cacheDirectory, downloadAsync } from "expo-file-system";
 
 
 const LoginTab = (
@@ -107,21 +111,78 @@ const RegisterTab = () => {
     const [remember, setRemember] = useState(false);
     const [imageUrl, setImageUrl] = useState(baseUrl + 'images/logo.png');
 
-
-
     const getImageFromCamera = async () => {
-    const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
-    if(cameraPermission.status === 'granted'){
-        const capturedImage = await ImagePicker.launchCameraAsync({
-            allowsEditing: true,
-            aspect: [1, 1]
-        });
-        if(capturedImage.assets){
-            console.log(capturedImage.assets[0]);
-            setImageUrl(capturedImage.assets[0].uri);
+        const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+        if (cameraPermission.status === 'granted') {
+            const capturedImage = await ImagePicker.launchCameraAsync({
+                allowsEditing: true,
+                aspect: [1, 1]
+            });
+            if (capturedImage.assets) {
+                processImage(capturedImage.assets[0].uri)
+                console.log(imageUrl);
+                let doYouWhantToSaveMsg = 'Do you whant to save your picture to the gallery?';
+                Alert.alert(
+                    "Nice picture! What about saving it?",
+                    doYouWhantToSaveMsg,
+                    [
+                        {
+                            text: "Cancel",
+                            onPress: () => null
+
+                        },
+                        {
+                            text: "Save",
+                            onPress: async () => {
+                                try {
+                                    const permissions = await ImagePicker.requestMediaLibraryPermissionsAsync()
+                                    const permissions1 = await MediaLibrary.getPermissionsAsync()
+                                    if (permissions && permissions1) {
+                                        //await MediaLibrary.saveToLibraryAsync(picture.uri)
+                                        const picture = await MediaLibrary.createAssetAsync(imageUrl, true);
+                                        Alert.alert(
+                                            'Saved as ' + picture.id)
+
+                                    }
+
+                                } catch (e) {
+                                    console.log(e);
+                                }
+                            }
+                        }
+                    ]
+
+                );
+            }
         }
     }
-}
+
+    const getImageFromGallery = async () => {
+        const gallertyPermission = await ImagePicker.requestCameraPermissionsAsync();
+        if (gallertyPermission.status === 'granted') {
+            const capturedImage = await ImagePicker.launchImageLibraryAsync({
+                allowsEditing: true,
+                aspect: [1, 1]
+            });
+            if (capturedImage.assets) {
+                console.log(capturedImage.assets[0]);
+                setImageUrl(capturedImage.assets[0].uri);
+            }
+        }
+    }
+
+
+    const processImage = async (imgUri) => {
+        const processedImage = await ImageManipulator.manipulateAsync(
+            imgUri,
+            [{ resize: { width: 400, height: 400 } }],
+            { format: ImageManipulator.SaveFormat.PNG },
+
+        );
+        console.log(processedImage);
+        setImageUrl(processedImage.uri);
+    }
+
 
     const handleRegister = () => {
         const userInfo = {
@@ -146,12 +207,13 @@ const RegisterTab = () => {
     return (<ScrollView>
         <View style={styles.container}>
             <View style={styles.imageContainer}>
-            <Image
-    source={{ uri: imageUrl }}
-    loadingIndicatorSource={logo}
-    style={styles.image}
-/>
-<Button title='Camera' onPress={getImageFromCamera} />
+                <Image
+                    source={{ uri: imageUrl }}
+                    loadingIndicatorSource={logo}
+                    style={styles.image}
+                />
+                <Button title='Camera' onPress={getImageFromCamera} />
+                <Button title='Gallery' onPress={getImageFromGallery} />
             </View>
             <Input
                 placeholder='Username'
